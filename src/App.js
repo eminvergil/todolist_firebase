@@ -1,14 +1,27 @@
 import React from "react";
 import logo from "./logo.svg";
+
+import { DB_CONFIG } from "./Config/config";
+import firebase from "firebase/app";
+import "firebase/database";
+
 import "./App.css";
+
+var app = firebase.initializeApp(DB_CONFIG);
 
 class App extends React.Component {
   constructor(props) {
     super(props);
+
+    this.updateInput = this.updateInput.bind(this);
+    this.addItem = this.addItem.bind(this);
+
+    // this.app = firebase.initializeApp(DB_CONFIG);
+    this.database = app.database().ref().child("noteList");
+
     this.state = {
       newNote: "",
       noteList: [],
-      idList: [33, 55],
     };
   }
 
@@ -18,20 +31,34 @@ class App extends React.Component {
     });
   }
 
+  componentWillMount() {
+    const prevNotes = this.state.noteList;
+
+    this.database.on("child_added", (snap) => {
+      prevNotes.push({
+        id: snap.key,
+        value: snap.val().noteList.value,
+      });
+
+      this.setState({
+        noteList: prevNotes,
+      });
+    });
+  }
+
   addItem() {
     const newNote = {
       id: 1 + Math.random(),
       value: this.state.newNote.slice(),
     };
+    // const noteList = [...this.state.noteList];
+    // noteList.push(newNote);
+    // this.setState({
+    //   newNote: "",
+    //   noteList,
+    // });
 
-    const noteList = [...this.state.noteList];
-
-    noteList.push(newNote);
-
-    this.setState({
-      newNote: "",
-      noteList,
-    });
+    this.database.push().set({ noteList: newNote });
   }
 
   render() {

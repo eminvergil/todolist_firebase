@@ -44,6 +44,18 @@ class App extends React.Component {
         noteList: prevNotes,
       });
     });
+
+    this.database.on("child_removed", (snap) => {
+      for (let i = 0; i < this.state.noteList.length; i++) {
+        if (prevNotes[i].id == snap.key) {
+          prevNotes.slice(i, 1);
+        }
+      }
+
+      this.setState({
+        noteList: prevNotes,
+      });
+    });
   }
 
   addItem() {
@@ -61,6 +73,10 @@ class App extends React.Component {
     this.database.push().set({ noteList: newNote });
   }
 
+  romeveItem(id) {
+    this.database.child(id).remove();
+  }
+
   render() {
     return (
       <div className="App">
@@ -73,7 +89,12 @@ class App extends React.Component {
         ></input>
         <button onClick={() => this.addItem()}>Add TODO</button>
         {this.state.noteList.map((note) => {
-          return <li key={note.id}>{note.value}</li>;
+          return (
+            <li key={note.id}>
+              {note.value}{" "}
+              <button onClick={() => this.romeveItem(note.id)}>X</button>
+            </li>
+          );
         })}
       </div>
     );
